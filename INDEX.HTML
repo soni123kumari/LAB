@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> 
+    <style>
+        /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    color: #2c3e50;
+}
+
+/* Section Styles */
+section {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 900px;
+    animation: fadeIn 1s ease-out;
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input, form button {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+form button {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #2980b9;
+}
+
+/* Book List */
+#bookList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#bookList li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+#bookList li:hover {
+    background-color: #ecf0f1;
+}
+
+#bookList li button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#bookList li button:hover {
+    background-color: #c0392b;
+}
+
+/* Search */
+#searchButton {
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+#searchButton:hover {
+    background-color: #27ae60;
+}
+
+/* Student List */
+#studentList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#studentList li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Issue/Return Book Forms */
+#issueBookForm, #returnBookForm {
+    margin: 10px 0;
+}
+
+#issueBookForm input, #returnBookForm input {
+    margin-right: 10px;
+}
+
+/* Current Time */
+#currentTime {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    form input, form button {
+        width: 100%;
+    }
+
+    #bookList li, #studentList li {
+        font-size: 14px;
+    }
+}
+    </style>
+</head>
+<body>
+    <h1>Library Management System</h1>
+
+    <!-- Add Book Form -->
+    <section>
+        <h2>Add Book</h2>
+        <form id="addBookForm">
+            <input type="text" id="bookName" placeholder="Book Name" required>
+            <input type="text" id="authorName" placeholder="Author Name" required>
+            <input type="text" id="bookId" placeholder="Book ID" required>
+            <button type="submit">Add Book</button>
+        </form>
+    </section>
+
+    <!-- Book List -->
+    <section>
+        <h2>Books</h2>
+        <ul id="bookList"></ul>
+    </section>
+
+    <!-- Search Books -->
+    <section>
+        <h2>Search Books</h2>
+        <input type="text" id="searchQuery" placeholder="Search...">
+        <button id="searchButton">Search</button>
+    </section>
+
+    <!-- Student Management -->
+    <section>
+        <h2>Student Management</h2>
+        <form id="enterStudentForm">
+            <input type="text" id="studentName" placeholder="Student Name" required>
+            <button type="submit">Enter</button>
+        </form>
+        <form id="leaveStudentForm">
+            <input type="text" id="studentNameLeave" placeholder="Student Name" required>
+            <button type="submit">Leave</button>
+        </form>
+        <h3>Current Students</h3>
+        <ul id="studentList"></ul>
+    </section>
+
+    <!-- Issue/Return Books -->
+    <section>
+        <h2>Issue/Return Books</h2>
+        <form id="issueBookForm">
+            <input type="text" id="issueBookId" placeholder="Book ID" required>
+            <input type="text" id="issueStudentName" placeholder="Student Name" required>
+            <button type="submit">Issue Book</button>
+        </form>
+        <form id="returnBookForm">
+            <input type="text" id="returnBookId" placeholder="Book ID" required>
+            <button type="submit">Return Book</button>
+        </form>
+    </section>
+
+    <!-- Show Current Time -->
+    <section>
+        <h2>Current Time</h2>
+        <p id="currentTime"></p>
+    </section>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    loadBooks();
+    loadStudents();
+    fetchCurrentTime();
+});
+
+const addBookForm = document.getElementById('addBookForm');
+const bookList = document.getElementById('bookList');
+const searchButton = document.getElementById('searchButton');
+const searchQuery = document.getElementById('searchQuery');
+const enterStudentForm = document.getElementById('enterStudentForm');
+const leaveStudentForm = document.getElementById('leaveStudentForm');
+const studentList = document.getElementById('studentList');
+const issueBookForm = document.getElementById('issueBookForm');
+const returnBookForm = document.getElementById('returnBookForm');
+const currentTimeElement = document.getElementById('currentTime');
+
+addBookForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = document.getElementById('bookName').value;
+    const author = document.getElementById('authorName').value;
+    const id = document.getElementById('bookId').value;
+    fetch('/add_book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, author, id })
+    }).then(() => {
+        addBookForm.reset();
+        loadBooks();
+    });
+});
+
+function loadBooks() {
+    fetch('/books')
+        .then(response => response.json())
+        .then(books => {
+            bookList.innerHTML = '';
+            books.forEach(book => {
+                const li = document.createElement('li');
+                li.textContent = `${book.name} by ${book.author} (ID: ${book.id}, Status: ${book.status})`;  // Fixed: Added backticks
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.addEventListener('click', () => {
+                    removeBook(book.id);
+                });
+                li.appendChild(removeButton);
+                bookList.appendChild(li);
+            });
+        });
+}
+
+function removeBook(id) {
+    fetch('/remove_book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    }).then(() => {
+        loadBooks();
+    });
+}
+
+searchButton.addEventListener('click', () => {
+    const query = searchQuery.value.toLowerCase();
+    fetch('/books')
+        .then(response => response.json())
+        .then(books => {
+            bookList.innerHTML = '';
+            books.forEach(book => {
+                if (book.name.toLowerCase().includes(query) || book.author.toLowerCase().includes(query)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${book.name} by ${book.author} (ID: ${book.id}, Status: ${book.status})`;  // Fixed: Added backticks
+                    bookList.appendChild(li);
+                }
+            });
+        });
+});
+
+enterStudentForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = document.getElementById('studentName').value;
+    fetch('/add_student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    }).then(() => {
+        enterStudentForm.reset();
+        loadStudents();
+    });
+});
+
+leaveStudentForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = document.getElementById('studentNameLeave').value;
+    fetch('/remove_student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    }).then(() => {
+        leaveStudentForm.reset();
+        loadStudents();
+    });
+});
+
+function loadStudents() {
+    fetch('/students')
+        .then(response => response.json())
+        .then(students => {
+            studentList.innerHTML = '';
+            students.forEach(student => {
+                const li = document.createElement('li');
+                li.textContent = student;
+                studentList.appendChild(li);
+            });
+        });
+}
+
+issueBookForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const id = document.getElementById('issueBookId').value;
+    const student = document.getElementById('issueStudentName').value;
+    fetch('/issue_book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, student })
+    }).then(() => {
+        issueBookForm.reset();
+        loadBooks();
+    });
+});
+
+returnBookForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const id = document.getElementById('returnBookId').value;
+    fetch('/return_book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    }).then(() => {
+        returnBookForm.reset();
+        loadBooks();
+    });
+});
+
+function fetchCurrentTime() {
+    fetch('/current_time')
+        .then(response => response.json())
+        .then(data => {
+            currentTimeElement.textContent = `Current Time: ${data.current_time}`;  // Fixed: Added backticks and proper template literal
+        });
+}
+
+    </script>
+</body>
+</html>
